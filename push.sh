@@ -5,8 +5,8 @@
 #   - Go to https://github.com/new
 #   - Owner: mandlamt
 #   - Name:   BankWithdrawal
-#   - Public or Private (your choice)
-#   - DO NOT initialize with README, .gitignore, or license (we have them)
+#   - Public or Private 
+#   - DO NOT initialize with README, .gitignore, or license 
 #   - Click "Create repository"
 #
 # Then run this script from the repo root.
