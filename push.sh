@@ -17,7 +17,7 @@ REMOTE_URL="https://github.com/mandlamt/BankWithdrawal.git"
 BRANCH="main"
 
 echo "Pushing local branch '$BRANCH' to $REMOTE_URL ..."
-echo "(You will be prompted for GitHub credentials, or your credential helper will be used.)"
+echo "( GitHub credentials will be used.)"
 echo
 
 # If a remote named 'origin' is already set, leave it; otherwise add it.
@@ -29,4 +29,4 @@ fi
 git push -u origin "$BRANCH"
 
 echo
-echo "Done. Your repo is now live at: https://github.com/mandlamt/BankWithdrawal"
+echo "Done.  repo is now live at: https://github.com/mandlamt/BankWithdrawal"
