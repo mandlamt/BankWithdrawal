@@ -1,76 +1,80 @@
-# Pushing to GitHub — what I did and what you need to do
+# Pushing to GitHub — status and what you need to do
 
-I prepared the project locally in this sandbox, but **I cannot push to your
-GitHub account for you**: I do not have your credentials, and pushing code
-on your behalf is an action that must be authenticated as you.
+I prepared the project locally and got partway through the push, but hit a
+hard wall that I can't work around without your action.
 
-Here is the state of the world and the exact steps to finish.
+## Current status
 
-## What I verified
+| Step                                              | Result                                                                 |
+|---------------------------------------------------|------------------------------------------------------------------------|
+| Verified token authenticates as `mandlamt`         | ✅ (user id 8694526)                                                   |
+| Created empty repo `mandlamt/BankWithdrawal` via API | ✅ (default branch: `main`, public)                                |
+| `git push` with the same token                    | ❌ `403: Permission to mandlamt/BankWithdrawal.git denied to mandlamt` |
+| Same token pushing to an existing repo (`AppointmentBooking`) | ❌ Same `403`                                              |
+| Same token trying to delete the empty repo        | ❌ `403: Resource not accessible by personal access token`             |
 
-| Check                                       | Result                                                                 |
-|---------------------------------------------|------------------------------------------------------------------------|
-| GitHub user `mandlamt`                      | Exists (account id 8694526)                                            |
-| Repo `https://github.com/mandlamt/BankWithdrawal` | **Does not exist yet** (HTTP 404 from the GitHub API)              |
-| Local git repo                              | Initialized, `.gitignore` added, initial commit made on `main`         |
-| Remote `origin`                             | Set to `https://github.com/mandlamt/BankWithdrawal.git` (not yet pushed) |
+**Diagnosis:** this is a fine-grained PAT (`github_pat_…`) without
+**`Contents: Read and write`** permission at the token level. The token
+works fine for *reading* the API and creating the repo, but it cannot
+write to git contents, push code, create issues, or delete the repo
+I just created on your behalf.
 
-## What I did to the code
+The `permissions: { push: True }` you can see in the API response is
+the *user's* permission on the repo, not the *token's* permission. They
+are different things, and the token is the narrower of the two.
+
+## What I did locally
 
 1. Extracted `BankWithdrawal.zip` from the user input files.
 2. Added a standard .NET / Visual Studio `.gitignore` (excludes `bin/`,
    `obj/`, `.vs/`, `*.user`, `*.suo`, `packages/`, etc.).
-3. `git init -b main`, then a single commit:
-   *"Initial commit: BankWithdrawal C#/ASP.NET Core 8 redesign"*
-   — 19 files, 1073 insertions.
-4. Added the remote `origin` pointing at
-   `https://github.com/mandlamt/BankWithdrawal.git`.
+3. `git init -b main`, two commits on `main`:
+   - `dfeb475` — *Initial commit: BankWithdrawal C#/ASP.NET Core 8 redesign* (19 files, 1073 insertions)
+   - `4633548` — *Add push.sh helper and PUSH_INSTRUCTIONS.md*
+4. Added remote `origin` = `https://github.com/mandlamt/BankWithdrawal.git`
+   (currently stored **without** the token embedded — I removed the
+   credential helper and any token in the URL after the failed attempts,
+   so this repo is clean.)
+5. Created the empty `mandlamt/BankWithdrawal` repo via the API — it
+   exists on github.com right now, but is empty (no commits, no files).
 
-## What you need to do (two steps)
+## What you need to do (about 2 minutes)
 
-### Step 1 — Create the empty repo on GitHub
+### Step 1 — Fix the token, OR generate a new one
 
-Go to **https://github.com/new** and fill in:
+Go to **https://github.com/settings/personal-access-tokens** and either:
 
-- **Owner:** `mandlamt`
-- **Repository name:** `BankWithdrawal`
-- **Description:** *C# / ASP.NET Core 8 redesign of a bank withdrawal endpoint
-  (transactional outbox, idempotency, atomic balance check).*
-- **Public / Private:** your choice
-- ⚠️ **Do NOT** check "Add a README file", "Add .gitignore", or "Choose a
-  license" — we already have these in the commit. (If you do, the push
-  below will be rejected as a non-fast-forward and you'll need to pull
-  and merge, or just delete the repo and recreate it empty.)
+- **Edit the existing token**: under *Repository access*, make sure
+  `mandlamt/BankWithdrawal` is in the list (or switch to *All
+  repositories*). Under *Permissions → Repository permissions*, set
+  **Contents** to **Read and write**. Save.
+- **Generate a new fine-grained PAT** with the same two settings, and
+  paste it back to me.
+- **OR generate a classic PAT** (Settings → Developer settings →
+  Personal access tokens → *Tokens (classic)* → *Generate new token*,
+  scope = `repo`). Classic PATs are simpler and known to work for
+  `git push` from the box.
 
-Click **Create repository**.
+### Step 2 — Delete the empty repo (if you want a clean start)
 
-### Step 2 — Push
+The empty `mandlamt/BankWithdrawal` repo I created is still there but
+contains nothing. Either keep it and push to it, or delete it manually
+from the repo's settings page (the token can't delete it because it
+lacks the permission). The Settings → Danger Zone → Delete this
+repository button works fine from a logged-in browser session.
 
-You can run `push.sh` from the repo root, or run the equivalent git
-commands directly:
+### Step 3 — Hand the fixed token to me (or push it yourself)
+
+If you want me to finish the push, paste the new (or fixed) token
+in your next message and I'll re-attempt.
+
+Or, from the repo root:
 
 ```bash
 cd /path/to/BankWithdrawal
-
-# (only if origin is not already set)
-git remote add origin https://github.com/mandlamt/BankWithdrawal.git
-
 git push -u origin main
 ```
 
-When prompted:
-
-- **HTTPS + PAT:** paste a GitHub Personal Access Token (Settings →
-  Developer settings → Personal access tokens → Tokens (classic), with
-  `repo` scope). The token is the password.
-- **HTTPS + GitHub CLI:** run `gh auth login` once, then `gh repo create
-  mandlamt/BankWithdrawal --source=. --remote=origin --push` (only if
-  the repo was created via the CLI; otherwise just `git push -u origin
-  main` will work after `gh auth login`).
-- **SSH:** make sure `git@github.com:mandlamt/BankWithdrawal.git` is the
-  remote (not the HTTPS one). `git remote set-url origin
-  git@github.com:mandlamt/BankWithdrawal.git`, then `git push -u origin
-  main`.
-
-That's it — the same `dfeb475` commit I made locally will be the first
-commit on `main`.
+You will be prompted for credentials — the username is `x-access-token`
+and the password is the PAT (or, for a classic PAT, your GitHub
+username and the PAT as the password).
